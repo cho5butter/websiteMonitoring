@@ -5,4 +5,11 @@ Url:
   - https://www.google.com
   - https://www.yahoo.co.jp
   - https://www.bing.com
-Name: TEST
+Mail: 
+  Smtp: smtp.sample
+  Port: 587
+  From: sample@test.sample
+  To: sample@test.sample
+  Subject: ホームページ更新
+  Account: sample@test.sample
+  Password: 123456Pass
