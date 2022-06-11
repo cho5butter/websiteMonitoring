@@ -50,7 +50,9 @@ def monitoring_pages():
 
     with open(list_file_path, 'r') as yml:
         config = yaml.safe_load(yml)
-    print(config['URL'])
+
+    for url in config['Url']:
+        print(url)
     
          
 
