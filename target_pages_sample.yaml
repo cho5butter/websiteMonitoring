@@ -15,7 +15,7 @@ Mail:
     - test2@test.sample
     - test3@test.sample
   Subject: ホームページ更新
-  Message: "ホームページの更新を検知しました"
+  Header: "ホームページの更新を検知しました"
+  Footer: "テストシステム"
   Account: sample@test.sample
   Password: 123456Pass
-  System: テストシステム

@@ -13,38 +13,7 @@ import requests
 from sympy import true
 import yaml
 import difflib
-
-def createMIMEText(from_email, to, message, subject, filename=""):
-    # MIMETextを作成
-    msg = MIMEMultipart()
-    msg['Subject'] = subject
-    msg['From'] = from_email
-    msg['To'] = to
-    msg.attach(MIMEText(message, 'plain', 'utf-8'))
-
-    return msg
-
-def send_email(msg):
-    account = os.environ['MONI_ACCOUNT']
-    password = os.environ['MONI_PASS']
-
-    host = os.environ['MONI_SMTP']
-    port = os.environ['MONI_PORT']
-
-    # サーバを指定する
-    # server = SMTP(host, port)
-    context = ssl.create_default_context()
-    server = SMTP_SSL(host, port, context=context)
-
-    # ログイン処理
-    server.login(account, password)
-
-    # メールを送信する
-    server.send_message(msg)
-    
-    # 閉じる
-    server.quit()
-
+import smtplib
 
 if __name__ == '__main__':
 
@@ -72,13 +41,13 @@ if __name__ == '__main__':
         try:
             with open(curl) as f:
                 reader = f.read()
-            if (stringBody != reader):
+            if (stringBody == reader):
                 print('更新検知')
                 res = difflib.context_diff(stringBody, reader)
                 diff = {"title": title, "url": url}
                 detectUpdates.append(diff)
         except FileNotFoundError:
-            print("Generate File")
+            print("ファイル生成中")
         writer = open(curl, 'w')
         writer.write(stringBody)
         writer.close()
@@ -86,22 +55,26 @@ if __name__ == '__main__':
     if not detectUpdates:
         print('更新はありませんでした')
         exit()
+    
+    message = config['Mail']['Header']
+    for index, update in enumerate(detectUpdates):
+        message += str(index + 1) + ' - ' + update['title'] + '\n'
+        message += '    ' + update['url'] + '\n\n'
+    message += config['Mail']['Footer']
 
     msg = MIMEMultipart()
     msg['Subject'] = config['Mail']['Subject']
     msg['From'] = config['Mail']['From']
     msg['To'] = config['Mail']['To']
-    print(','.join(config['Mail']['Bcc']))
     msg['Bcc'] = ','.join(config['Mail']['Bcc'])
+    msg.attach(MIMEText(message, 'plain', 'utf-8'))
 
+    account = config['Mail']['Account']
+    password = config['Mail']['Password']
+    host = config['Mail']['Smtp']
+    port = config['Mail']['Port']
 
-
-    # from_email = os.environ['MONI_FROM']
-
-    # # メール送信先
-    # to_email = os.environ['MONI_TO']
-
-    # subject = "メール件名"
-    # message = "メール本文"
-    # mime = createMIMEText(from_email, to_email, message, subject)
-    # send_email(mime)
+    server = smtplib.SMTP(host, port)
+    server.login(account, password)
+    server.send_message(msg)
+    server.quit()
