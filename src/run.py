@@ -41,7 +41,7 @@ if __name__ == '__main__':
         try:
             with open(curl) as f:
                 reader = f.read()
-            if (stringBody == reader):
+            if (stringBody != reader):
                 print('更新検知')
                 res = difflib.context_diff(stringBody, reader)
                 diff = {"title": title, "url": url}
