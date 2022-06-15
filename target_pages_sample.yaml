@@ -10,6 +10,12 @@ Mail:
   Port: 587
   From: sample@test.sample
   To: sample@test.sample
+  Bcc:
+    - test1@test.sample
+    - test2@test.sample
+    - test3@test.sample
   Subject: ホームページ更新
+  Message: "ホームページの更新を検知しました"
   Account: sample@test.sample
   Password: 123456Pass
+  System: テストシステム

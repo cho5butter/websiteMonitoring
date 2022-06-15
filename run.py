@@ -1,3 +1,6 @@
+from tokenize import String
+from unittest import expectedFailure
+from charset_normalizer import detect
 from dotenv import load_dotenv
 import os
 import ssl
@@ -7,7 +10,9 @@ from email.mime.multipart import MIMEMultipart
 from email.utils import formatdate
 from bs4 import BeautifulSoup
 import requests
+from sympy import true
 import yaml
+import difflib
 
 def createMIMEText(from_email, to, message, subject, filename=""):
     # MIMETextを作成
@@ -40,35 +45,57 @@ def send_email(msg):
     # 閉じる
     server.quit()
 
-def monitoring_pages():
+
+if __name__ == '__main__':
+
+    load_dotenv()
+
     list_file_path = "target_pages_sample.yaml"
 
     if os.getenv('MONI_FILEPATH'):
         list_file_path = os.getenv('MONI_FILEPATH')
-
-    print(list_file_path)
-
+    
     with open(list_file_path, 'r') as yml:
         config = yaml.safe_load(yml)
 
+    detectUpdates = []
+
+    os.makedirs('dist/', exist_ok=True)
+
     for url in config['Url']:
-        print(url)
-    
-         
+        html = requests.get(url)
+        soup = BeautifulSoup(html.content, "html.parser")
+        body = soup.find('body')
+        title = soup.find('title').text
+        stringBody = str(body).replace(' ', '').replace('\n', '').replace('　', '').replace(' ','').replace('\r','')
+        curl = 'dist/' + url.replace(':', '').replace('/', '').replace('.', '').replace('~', '')
+        try:
+            with open(curl) as f:
+                reader = f.read()
+            if (stringBody != reader):
+                print('更新検知')
+                res = difflib.context_diff(stringBody, reader)
+                diff = {"title": title, "url": url}
+                detectUpdates.append(diff)
+        except FileNotFoundError:
+            print("Generate File")
+        writer = open(curl, 'w')
+        writer.write(stringBody)
+        writer.close()
 
-def analysis_html():
-    load_url = "https://www.ymori.com/books/python2nen/test1.html"
-    html = requests.get(load_url)
-    soup = BeautifulSoup(html.content, "html.parser")
-    print(soup)
+    if not detectUpdates:
+        print('更新はありませんでした')
+        exit()
 
-if __name__ == '__main__':
-    load_dotenv()
-    SMTP = os.environ['MONI_SMTP']
-    print(SMTP)
+    msg = MIMEMultipart()
+    msg['Subject'] = config['Mail']['Subject']
+    msg['From'] = config['Mail']['From']
+    msg['To'] = config['Mail']['To']
+    print(','.join(config['Mail']['Bcc']))
+    msg['Bcc'] = ','.join(config['Mail']['Bcc'])
 
-    monitoring_pages()
-    analysis_html()
+
+
     # from_email = os.environ['MONI_FROM']
 
     # # メール送信先
