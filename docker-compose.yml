@@ -4,7 +4,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    tty: true
     environment:
       LANG: ja_JP.UTF-8
       LANGUAGE: ja_JP:ja
