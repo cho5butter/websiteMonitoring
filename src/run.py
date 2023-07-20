@@ -8,12 +8,14 @@ from smtplib import SMTP, SMTP_SSL
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.utils import formatdate
+from email.header import Header
 from bs4 import BeautifulSoup
 import requests
 from sympy import true
 import yaml
 import difflib
 import smtplib
+from difflib import SequenceMatcher
 
 if __name__ == '__main__':
 
@@ -43,8 +45,9 @@ if __name__ == '__main__':
                 reader = f.read()
             if (stringBody != reader):
                 print('更新検知')
+                s = SequenceMatcher(None, stringBody, reader)
                 res = difflib.context_diff(stringBody, reader)
-                diff = {"title": title, "url": url}
+                diff = {"title": title, "url": url, "ratio": str(round(100 - s.ratio() * 100, 2))}
                 detectUpdates.append(diff)
         except FileNotFoundError:
             print("ファイル生成中")
@@ -59,12 +62,12 @@ if __name__ == '__main__':
     message = config['Mail']['Header']
     for index, update in enumerate(detectUpdates):
         message += str(index + 1) + ' - ' + update['title'] + '\n'
-        message += '    ' + update['url'] + '\n\n'
+        message += '    (変化率:' + update['ratio'] + '%) ' + update['url'] + '\n\n'
     message += config['Mail']['Footer']
 
     msg = MIMEMultipart()
     msg['Subject'] = config['Mail']['Subject']
-    msg['From'] = config['Mail']['From']
+    msg['From'] = '%s <%s>'%(Header(config['Mail']['FromJp'].encode('iso-2022-jp'),'iso-2022-jp').encode(), config['Mail']['From'])
     msg['To'] = config['Mail']['To']
     msg['Bcc'] = ','.join(config['Mail']['Bcc'])
     msg.attach(MIMEText(message, 'plain', 'utf-8'))

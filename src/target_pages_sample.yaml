@@ -9,6 +9,7 @@ Mail:
   Smtp: smtp.sample
   Port: 587
   From: sample@test.sample
+  FromJp: "ホームページ更新検知システム"
   To: sample@test.sample
   Bcc:
     - test1@test.sample
